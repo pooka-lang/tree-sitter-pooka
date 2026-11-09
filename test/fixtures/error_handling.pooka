@@ -1,0 +1,46 @@
+module configuration
+
+import pooka/int
+
+class Config {
+  let port: Int
+  new(port: Int) { self.port = port }
+}
+
+validate_port(port: Int) -> Result(Nil, String) {
+  match port > 0 && port <= 65535 {
+    True -> Ok(Nil)
+    False -> Error("port must be between 1 and 65535")
+  }
+}
+
+with_propagation(source: String) -> Result(Config, String) {
+  let port = int.parse(source)?
+  validate_port(port)?
+  Ok(Config(port))
+}
+
+with_explicit_matches(source: String) -> Result(Config, String) {
+  match int.parse(source) {
+    Error(error) -> Error(error)
+    Ok(port) -> {
+      match validate_port(port) {
+        Error(error) -> Error(error)
+        Ok(_) -> Ok(Config(port))
+      }
+    }
+  }
+}
+
+trusted_with_assert(source: String) -> Config {
+  let assert Ok(config) = with_propagation(source)
+    as "built-in configuration must be valid"
+  config
+}
+
+trusted_with_match(source: String) -> Config {
+  match with_propagation(source) {
+    Ok(config) -> config
+    Error(_) -> panic as "built-in configuration must be valid"
+  }
+}

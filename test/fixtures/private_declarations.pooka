@@ -1,0 +1,41 @@
+module private_declarations
+
+interface _Readable {
+  read() -> Int
+}
+
+external _Numbers from erlang "erlang" {
+  abs(value: Int) -> Int
+}
+
+_absolute(value: Int) -> Int { _Numbers.abs(value) }
+
+class _Box with _Readable {
+  let _value: Int
+
+  new(value: Int) { self._value = value }
+
+  _get() -> Int { _value }
+
+  read() -> Int { _absolute(_get()) }
+}
+
+actor _Counter with _Readable {
+  var _count: Int
+
+  new(initial: Int) { self._count = initial }
+
+  _current() -> Int { _count }
+
+  read() -> Int { _current() }
+
+  be _increase(amount: Int) { _count += amount }
+
+  be increase(amount: Int) { _increase(amount) }
+}
+
+example() -> #(Int, Int) {
+  let box: _Box = _Box(-42)
+  let counter: _Counter = _Counter(7)
+  #(box.read(), counter.read())
+}

@@ -1,0 +1,19 @@
+module indentation
+class A {
+}
+actor Worker {
+}
+interface Reader {
+  read() -> Int
+}
+external Native from erlang "native" {
+  read() -> Int
+}
+main() {
+  match True {
+    True -> {
+      Nil
+    }
+    False -> Nil
+  }
+}

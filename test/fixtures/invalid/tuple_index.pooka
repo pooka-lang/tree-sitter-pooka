@@ -1,0 +1,3 @@
+module tuple_index
+bad(value) { value.0 }
+after_error() { 42 }

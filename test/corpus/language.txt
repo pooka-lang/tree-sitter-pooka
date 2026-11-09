@@ -1,0 +1,787 @@
+==================
+declarations
+==================
+//// Typed values and behaviours.
+module values
+import contracts.{Reader as Source}
+class Box(a) with Source(a) {
+  /// The stored value.
+  let value: a
+  new(value) { self.value = value }
+  get() -> a { value }
+}
+actor Counter {
+  var count: Int = 0
+  be add(n: Int) { count += n }
+  get() -> Int { count }
+}
+interface Reader(a) { get() -> a }
+external Native from erlang "native" { read(input: String) -> Result(Int, String) }
+
+---
+
+(source_file
+  (module_comment)
+  (module_declaration
+    (identifier))
+  (import_declaration
+    (module_path
+      (identifier))
+    (import_item
+      (type_identifier)
+      (type_identifier)))
+  (class_declaration
+    (type_identifier)
+    (type_parameters
+      (identifier))
+    (conformance
+      (type
+        (applied_type
+          (type_identifier)
+          (type
+            (identifier)))))
+    (members
+      (doc_comment)
+      (field_declaration
+        (identifier)
+        (type
+          (identifier)))
+      (constructor
+        (parameters
+          (parameter
+            (identifier)))
+        (block
+          (binary_expression
+            (member_expression
+              (self)
+              (identifier))
+            (identifier))))
+      (function_declaration
+        (identifier)
+        (parameters)
+        (type
+          (identifier))
+        (block
+          (identifier)))))
+  (actor_declaration
+    (type_identifier)
+    (members
+      (field_declaration
+        (identifier)
+        (type
+          (type_identifier))
+        (number))
+      (behavior
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)
+            (type
+              (type_identifier))))
+        (block
+          (binary_expression
+            (identifier)
+            (identifier))))
+      (function_declaration
+        (identifier)
+        (parameters)
+        (type
+          (type_identifier))
+        (block
+          (identifier)))))
+  (interface_declaration
+    (type_identifier)
+    (type_parameters
+      (identifier))
+    (signature
+      (identifier)
+      (parameters)
+      (type
+        (identifier))))
+  (external_declaration
+    (type_identifier)
+    (identifier)
+    (string)
+    (external_signature
+      (identifier)
+      (parameters
+        (parameter
+          (identifier)
+          (type
+            (type_identifier))))
+      (type
+        (applied_type
+          (type_identifier)
+          (type
+            (type_identifier))
+          (type
+            (type_identifier)))))))
+
+==================
+control_flow
+==================
+module main
+main() {
+  let assert Ok(values) = load() as "configuration"
+  loop value in values {
+    match value {
+      Some(n) if n > 0 -> { echo n
+continue }
+      _ -> break 0
+    }
+  }
+  assert True as "expected success"
+  todo as "later"
+}
+load() { Ok([Some(1)]) }
+
+---
+
+(source_file
+  (module_declaration
+    (identifier))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (let_statement
+        (constructor_pattern
+          (type_identifier)
+          (identifier))
+        (call_expression
+          (identifier))
+        (string))
+      (loop_expression
+        (identifier)
+        (identifier)
+        (block
+          (match_expression
+            (identifier)
+            (match_arm
+              (constructor_pattern
+                (type_identifier)
+                (identifier))
+              (binary_expression
+                (identifier)
+                (number))
+              (block
+                (echo_expression
+                  (identifier))
+                (continue_expression)))
+            (match_arm
+              (break_expression
+                (number))))))
+      (assert_statement
+        (boolean)
+        (string))
+      (panic_expression
+        (string))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (call_expression
+        (type_identifier)
+        (list
+          (call_expression
+            (type_identifier)
+            (number)))))))
+
+==================
+unicode_binary
+==================
+module binary
+encode(point: UtfCodepoint) { <<point:utf16_codepoint-little, 42:int-size(8)>> }
+decode(bytes) {
+  match bytes {
+    <<length:8, body:bytes-size(length), rest:bits>> -> #(body, rest)
+    _ -> #(<<>>, <<>>)
+  }
+}
+test skip "Unicode 😀" { assert "héllo\n" != "" }
+
+---
+
+(source_file
+  (module_declaration
+    (identifier))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (type_identifier))))
+    (block
+      (bit_array
+        (bit_segment
+          (identifier)
+          (bit_option
+            (identifier))
+          (bit_option
+            (identifier)))
+        (bit_segment
+          (number)
+          (bit_option
+            (identifier))
+          (bit_option
+            (identifier)
+            (number))))))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)))
+    (block
+      (match_expression
+        (identifier)
+        (match_arm
+          (bit_array_pattern
+            (bit_pattern_segment
+              (identifier)
+              (bit_option
+                (number)))
+            (bit_pattern_segment
+              (identifier)
+              (bit_option
+                (identifier))
+              (bit_option
+                (identifier)
+                (identifier)))
+            (bit_pattern_segment
+              (identifier)
+              (bit_option
+                (identifier))))
+          (tuple
+            (identifier)
+            (identifier)))
+        (match_arm
+          (tuple
+            (bit_array)
+            (bit_array))))))
+  (test_declaration
+    (string)
+    (block
+      (assert_statement
+        (binary_expression
+          (string
+            (escape_sequence))
+          (string))))))
+
+==================
+functions_types_and_operators
+==================
+module functions
+map(values: List(a), transform: fn(a) -> b) -> List(b) {
+  match values { [] -> []
+    [first, ..] -> [transform(first)] }
+}
+main() {
+  let f = fn(x: Int) -> Int { x * 2 + 1 }
+  let pair = #(True, Nil)
+  let values = [1, 2, 3]
+  echo f(42) |> consume
+  let result = load()?
+  !(result == 0) && True || False
+}
+
+---
+
+(source_file
+  (module_declaration
+    (identifier))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (applied_type
+            (type_identifier)
+            (type
+              (identifier)))))
+      (parameter
+        (identifier)
+        (type
+          (function_type
+            (type
+              (identifier))
+            (type
+              (identifier))))))
+    (type
+      (applied_type
+        (type_identifier)
+        (type
+          (identifier))))
+    (block
+      (match_expression
+        (identifier)
+        (match_arm
+          (list_pattern)
+          (list))
+        (match_arm
+          (list_pattern
+            (identifier)
+            (list_tail))
+          (list
+            (call_expression
+              (identifier)
+              (identifier)))))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (let_statement
+        (identifier)
+        (function_expression
+          (parameters
+            (parameter
+              (identifier)
+              (type
+                (type_identifier))))
+          (type
+            (type_identifier))
+          (block
+            (binary_expression
+              (binary_expression
+                (identifier)
+                (number))
+              (number)))))
+      (let_statement
+        (identifier)
+        (tuple
+          (boolean)
+          (nil)))
+      (let_statement
+        (identifier)
+        (list
+          (number)
+          (number)
+          (number)))
+      (echo_expression
+        (binary_expression
+          (call_expression
+            (identifier)
+            (number))
+          (identifier)))
+      (let_statement
+        (identifier)
+        (propagation_expression
+          (call_expression
+            (identifier))))
+      (binary_expression
+        (binary_expression
+          (unary_expression
+            (parenthesized_expression
+              (binary_expression
+                (identifier)
+                (number))))
+          (boolean))
+        (boolean)))))
+
+================================================================================
+Native declarations
+================================================================================
+
+import native
+
+/// Hashing in C.
+native Hash from "hash" {
+  digest(data: BitArray) -> BitArray
+}
+
+native _Empty from "fast_math" {}
+
+native(value: Int) { value }
+
+class Wrapper { native() { Hash.digest(<<1>>) } }
+
+main() { let native = 1 }
+
+---
+
+(source_file
+  (import_declaration
+    (module_path
+      (identifier)))
+  (doc_comment)
+  (native_declaration
+    (type_identifier)
+    (string)
+    (external_signature
+      (identifier)
+      (parameters
+        (parameter
+          (identifier)
+          (type
+            (type_identifier))))
+      (type
+        (type_identifier))))
+  (native_declaration
+    (type_identifier)
+    (string))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (type_identifier))))
+    (block
+      (identifier)))
+  (class_declaration
+    (type_identifier)
+    (members
+      (function_declaration
+        (identifier)
+        (parameters)
+        (block
+          (call_expression
+            (member_expression
+              (type_identifier)
+              (identifier))
+            (bit_array
+              (bit_segment
+                (number))))))))
+  (function_declaration
+    (identifier)
+    (parameters)
+    (block
+      (let_statement
+        (identifier)
+        (number)))))
+
+==================
+Result propagation and invariant binding
+==================
+module comparison
+
+with_propagation(value: Result(Int, String)) -> Result(Int, String) {
+  let number = value?
+  Ok(number + 1)
+}
+without_propagation(value: Result(Int, String)) -> Result(Int, String) {
+  match value {
+    Ok(number) -> Ok(number + 1)
+    Error(error) -> Error(error)
+  }
+}
+with_assert(value: Result(Int, String)) -> Int {
+  let assert Ok(number) = value as "expected success"
+  number
+}
+without_assert(value: Result(Int, String)) -> Int {
+  match value {
+    Ok(number) -> number
+    Error(_) -> panic as "expected success"
+  }
+}
+
+---
+
+(source_file
+  (module_declaration
+    (identifier))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (applied_type
+            (type_identifier)
+            (type
+              (type_identifier))
+            (type
+              (type_identifier))))))
+    (type
+      (applied_type
+        (type_identifier)
+        (type
+          (type_identifier))
+        (type
+          (type_identifier))))
+    (block
+      (let_statement
+        (identifier)
+        (propagation_expression
+          (identifier)))
+      (call_expression
+        (type_identifier)
+        (binary_expression
+          (identifier)
+          (number)))))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (applied_type
+            (type_identifier)
+            (type
+              (type_identifier))
+            (type
+              (type_identifier))))))
+    (type
+      (applied_type
+        (type_identifier)
+        (type
+          (type_identifier))
+        (type
+          (type_identifier))))
+    (block
+      (match_expression
+        (identifier)
+        (match_arm
+          (constructor_pattern
+            (type_identifier)
+            (identifier))
+          (call_expression
+            (type_identifier)
+            (binary_expression
+              (identifier)
+              (number))))
+        (match_arm
+          (constructor_pattern
+            (type_identifier)
+            (identifier))
+          (call_expression
+            (type_identifier)
+            (identifier))))))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (applied_type
+            (type_identifier)
+            (type
+              (type_identifier))
+            (type
+              (type_identifier))))))
+    (type
+      (type_identifier))
+    (block
+      (let_statement
+        (constructor_pattern
+          (type_identifier)
+          (identifier))
+        (identifier)
+        (string))
+      (identifier)))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (applied_type
+            (type_identifier)
+            (type
+              (type_identifier))
+            (type
+              (type_identifier))))))
+    (type
+      (type_identifier))
+    (block
+      (match_expression
+        (identifier)
+        (match_arm
+          (constructor_pattern
+            (type_identifier)
+            (identifier))
+          (identifier))
+        (match_arm
+          (constructor_pattern
+            (type_identifier))
+          (panic_expression
+            (string)))))))
+
+================================================================================
+Enums, concise classes and enum patterns
+================================================================================
+
+/// How serious it is.
+enum Severity {
+  Error
+  Warning
+}
+
+enum Direction { North, South, }
+
+class Point(x: Float, y: Float)
+
+class Circle(radius: Float) is Shape {
+  area() -> Float { radius * radius }
+}
+
+class Box(a) { let value: a }
+
+enum(value: Int) { value }
+
+main(enum: Int) {
+  let s = Severity.Error
+  match s {
+    Severity.Error -> 1
+    levels.Severity.Warning -> 2
+    Some(x) -> x
+    shapes.Circle(r) -> r
+  }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (doc_comment)
+  (enum_declaration
+    (type_identifier)
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier)))
+  (enum_declaration
+    (type_identifier)
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier)))
+  (class_declaration
+    (type_identifier)
+    (concise_fields
+      (concise_field
+        (identifier)
+        (type
+          (type_identifier)))
+      (concise_field
+        (identifier)
+        (type
+          (type_identifier)))))
+  (class_declaration
+    (type_identifier)
+    (concise_fields
+      (concise_field
+        (identifier)
+        (type
+          (type_identifier))))
+    (type
+      (type_identifier))
+    (members
+      (function_declaration
+        (identifier)
+        (parameters)
+        (type
+          (type_identifier))
+        (block
+          (binary_expression
+            (identifier)
+            (identifier))))))
+  (class_declaration
+    (type_identifier)
+    (type_parameters
+      (identifier))
+    (members
+      (field_declaration
+        (identifier)
+        (type
+          (identifier)))))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (type_identifier))))
+    (block
+      (identifier)))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (type_identifier))))
+    (block
+      (let_statement
+        (identifier)
+        (member_expression
+          (type_identifier)
+          (type_identifier)))
+      (match_expression
+        (identifier)
+        (match_arm
+          (enum_pattern
+            (type_identifier)
+            (type_identifier))
+          (number))
+        (match_arm
+          (enum_pattern
+            (identifier)
+            (type_identifier)
+            (type_identifier))
+          (number))
+        (match_arm
+          (constructor_pattern
+            (type_identifier)
+            (identifier))
+          (identifier))
+        (match_arm
+          (constructor_pattern
+            (qualified_pattern_name
+              (identifier)
+              (type_identifier))
+            (identifier))
+          (identifier))))))
+
+================================================================================
+Bitwise operators
+================================================================================
+
+has(flags: Int, mask: Int) -> Bool {
+  flags & mask != 0
+}
+
+combine(a: Int, b: Int) {
+  a | b & 0xFF
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (type
+          (type_identifier))))
+    (type
+      (type_identifier))
+    (block
+      (binary_expression
+        (binary_expression
+          (identifier)
+          (identifier))
+        (number))))
+  (function_declaration
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type
+          (type_identifier)))
+      (parameter
+        (identifier)
+        (type
+          (type_identifier))))
+    (block
+      (binary_expression
+        (identifier)
+        (binary_expression
+          (identifier)
+          (number))))))

@@ -1,0 +1,20 @@
+module main
+
+import enum
+
+enum Severity {
+  Error
+  Warning
+}
+
+class Point(x: Float, y: Float)
+
+enum(value: Int) { value }
+
+main(enum: Int) {
+  let s = Severity.Error
+  match s {
+    Severity.Error -> 1
+    levels.Severity.Warning -> 2
+  }
+}

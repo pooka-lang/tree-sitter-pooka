@@ -1,0 +1,18 @@
+module patterns
+lists(values) { match values {
+  [] -> 0
+  [first, ..rest] -> first
+} }
+constructors(value) { match value {
+  Some(#(first, [second, ..])) -> first + second
+  None -> 0
+} }
+qualified(value) { match value { model.Item(name) -> name } }
+negative(value) { match value { -1 -> True
+  _ -> False } }
+bits(data) { match data {
+  <<length:8, payload:bits-size(length)>> -> payload
+  _ -> <<>>
+} }
+extract(value) { let #(key, found) = value
+  #(key, found) }

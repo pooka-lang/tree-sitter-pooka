@@ -1,0 +1,5 @@
+module invalid_native
+native _Numbers from "numbers" {
+  double(value: Int): Int
+}
+after_error() { Nil }

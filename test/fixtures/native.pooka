@@ -1,0 +1,18 @@
+module native
+import helper.{native as call_native}
+
+/// Native implementations remain behind a private namespace.
+native _Numbers from "numbers" {
+  double(value: Int) -> Int
+  pair(values: List(Int)) -> #(Int, Int)
+}
+
+native(value: Int) -> Int { value }
+class Adapter {
+  native(value: Int) -> Int { _Numbers.double(value) }
+}
+
+main() {
+  let native = native(21)
+  echo _Numbers.double(native)
+}

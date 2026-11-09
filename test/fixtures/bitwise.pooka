@@ -1,0 +1,9 @@
+module main
+
+has(flags: Int, mask: Int) -> Bool {
+  flags & mask != 0
+}
+
+combine(a: Int, b: Int) {
+  a | b & 0xFF
+}

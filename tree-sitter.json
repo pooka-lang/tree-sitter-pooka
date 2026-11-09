@@ -1,0 +1,5 @@
+{
+  "grammars": [{"name": "pooka", "camelcase": "Pooka", "scope": "source.pooka", "path": ".", "file-types": ["pooka"], "highlights": "queries/highlights.scm", "injection-regex": "^pooka$"}],
+  "metadata": {"version": "0.1.0", "license": "Apache-2.0", "description": "Pooka editor grammar", "authors": [{"name": "Pooka contributors"}]},
+  "bindings": {"c": true}
+}
